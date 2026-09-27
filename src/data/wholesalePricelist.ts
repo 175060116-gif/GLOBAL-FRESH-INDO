@@ -738,7 +738,7 @@ export const WHOLESALE_PRICELIST: WholesalePricelistItem[] = [
   },
 ];
 
-const WHOLESALE_STORAGE_KEY = 'gfi_wholesale_pricelist_data_v2';
+const WHOLESALE_STORAGE_KEY = 'gfi_wholesale_pricelist_data_v3';
 
 export const getStoredWholesalePricelist = (): WholesalePricelistItem[] => {
   try {
@@ -746,7 +746,16 @@ export const getStoredWholesalePricelist = (): WholesalePricelistItem[] => {
     if (data) {
       const parsed = JSON.parse(data);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        // Merge with WHOLESALE_PRICELIST so all 57 official items are always present
+        const map = new Map<string, WholesalePricelistItem>();
+        WHOLESALE_PRICELIST.forEach((item) => map.set(item.code, { ...item }));
+        parsed.forEach((item: WholesalePricelistItem) => {
+          if (item && item.code) {
+            const existing = map.get(item.code);
+            map.set(item.code, existing ? { ...existing, ...item } : item);
+          }
+        });
+        return Array.from(map.values());
       }
     }
   } catch (e) {

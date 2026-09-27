@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Upload, Link, Check, RotateCcw, Image as ImageIcon, Sparkles, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Upload, Link, Check, RotateCcw, Image as ImageIcon, Sparkles, Loader2, CheckCircle2 } from 'lucide-react';
 import { compressImageFile } from '../utils/imageCompressor';
 
 interface EditFarmerImageModalProps {
@@ -42,6 +42,16 @@ export const EditFarmerImageModal: React.FC<EditFarmerImageModalProps> = ({
   const [mode, setMode] = useState<'upload' | 'url' | 'presets'>('upload');
   const [showSavedToast, setShowSavedToast] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+
+  // Sync state whenever modal is opened or currentImageUrl changes
+  useEffect(() => {
+    if (isOpen) {
+      setImageUrl(currentImageUrl || '/petani_rambutan.jpg');
+      setUploadedFileName(null);
+      setShowSavedToast(false);
+    }
+  }, [isOpen, currentImageUrl]);
 
   if (!isOpen) return null;
 
@@ -51,14 +61,15 @@ export const EditFarmerImageModal: React.FC<EditFarmerImageModalProps> = ({
 
     try {
       setIsCompressing(true);
-      // Auto-compress photo to avoid localStorage quota exceeded error
+      // Auto-compress photo to avoid localStorage quota exceeded error and fit Firestore
       const compressedDataUrl = await compressImageFile(file, {
-        maxWidth: 1000,
-        maxHeight: 800,
-        quality: 0.75,
-        maxSizeKB: 180,
+        maxWidth: 900,
+        maxHeight: 700,
+        quality: 0.72,
+        maxSizeKB: 140,
       });
       setImageUrl(compressedDataUrl);
+      setUploadedFileName(file.name);
     } catch (err: unknown) {
       console.error('Compress error:', err);
       alert('Gagal mengompres foto. Silakan coba foto lain atau gunakan tautan URL.');
@@ -71,6 +82,7 @@ export const EditFarmerImageModal: React.FC<EditFarmerImageModalProps> = ({
 
   const handleResetDefault = () => {
     setImageUrl('/petani_rambutan.jpg');
+    setUploadedFileName(null);
   };
 
   const handleSave = () => {
@@ -200,6 +212,13 @@ export const EditFarmerImageModal: React.FC<EditFarmerImageModalProps> = ({
                   className="hidden"
                 />
               </label>
+
+              {uploadedFileName && (
+                <div className="flex items-center justify-center gap-1.5 text-xs text-[#087F23] font-bold bg-[#E8F5E4] py-1.5 px-3 rounded-lg border border-[#CDE0C4]">
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate max-w-xs">Foto Siap: {uploadedFileName}</span>
+                </div>
+              )}
             </div>
           )}
 

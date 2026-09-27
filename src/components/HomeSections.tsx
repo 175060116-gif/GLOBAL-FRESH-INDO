@@ -352,7 +352,7 @@ export const HomeSections: React.FC<HomeSectionsProps> = ({
                 onClick={() => onNavigate('pricelist')}
                 className="flex items-center gap-1.5 text-xs font-bold text-[#087F23] hover:text-[#005500] bg-[#E8F5E4] px-4 py-2 rounded-lg transition-colors"
               >
-                <span>Lihat 48+ Buah Lengkap</span>
+                <span>Lihat 57+ Pricelist Lengkap</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>

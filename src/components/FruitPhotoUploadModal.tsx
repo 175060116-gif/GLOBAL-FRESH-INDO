@@ -6,6 +6,7 @@ import {
 import { compressImageFile } from '../utils/imageCompressor';
 
 export interface FruitPhotoTarget {
+  id?: string;
   code?: string;
   name: string;
   category?: string;
@@ -107,12 +108,12 @@ export const FruitPhotoUploadModal: React.FC<FruitPhotoUploadModalProps> = ({
 
     try {
       setIsCompressing(true);
-      // Auto compress to lightweight webp/jpeg data URL (max 80-120KB) so localStorage doesn't hit quota
+      // Auto compress to lightweight webp/jpeg data URL (max 80-130KB) so localStorage doesn't hit quota
       const compressedDataUrl = await compressImageFile(file, {
-        maxWidth: 900,
-        maxHeight: 900,
-        quality: 0.78,
-        maxSizeKB: 160,
+        maxWidth: 800,
+        maxHeight: 800,
+        quality: 0.76,
+        maxSizeKB: 130,
       });
 
       const approxSizeKB = Math.round((compressedDataUrl.length * 3) / 4 / 1024);
@@ -176,12 +177,17 @@ export const FruitPhotoUploadModal: React.FC<FruitPhotoUploadModalProps> = ({
   };
 
   const handleSave = () => {
-    if (!currentPreview) {
+    let finalImage = currentPreview;
+    if (activeTab === 'url' && urlInput.trim()) {
+      finalImage = urlInput.trim();
+    }
+
+    if (!finalImage) {
       alert('Foto buah tidak boleh kosong.');
       return;
     }
 
-    onSave(currentPreview);
+    onSave(finalImage);
     setShowSavedFeedback(true);
     setTimeout(() => {
       setShowSavedFeedback(false);

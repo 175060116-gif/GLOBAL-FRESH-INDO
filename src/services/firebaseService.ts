@@ -78,6 +78,16 @@ export function subscribeToProducts(
         items.push(mapped);
       });
 
+      // Ensure all initial products are present in Firestore
+      const missingProducts = PRODUCTS_DATA.filter((p) => !items.some((it) => it.id === p.id));
+      if (missingProducts.length > 0) {
+        for (const missing of missingProducts) {
+          saveProductToFirestore(missing).catch((e) =>
+            console.warn('Auto-sync missing product to Firestore:', missing.id, e)
+          );
+        }
+      }
+
       items.sort((a, b) => a.name.localeCompare(b.name));
       saveStoredProducts(items);
       onUpdate(items);
@@ -108,7 +118,9 @@ export async function saveProductToFirestore(product: Product): Promise<void> {
     };
 
     if (product.description) cleanData.description = String(product.description).slice(0, 500);
-    if (product.image && product.image.length <= 500) cleanData.image = product.image;
+    if (product.image && product.image.length <= 450000) {
+      cleanData.image = product.image;
+    }
 
     await setDoc(docRef, cleanData, { merge: true });
   } catch (err) {
@@ -141,36 +153,60 @@ export function subscribeToWholesale(
   return onSnapshot(
     collectionRef,
     async (snapshot) => {
-      if (snapshot.empty) {
-        try {
-          await seedInitialWholesale();
-        } catch (e) {
-          console.warn('Could not auto-seed wholesale to Firestore, using local defaults', e);
-        }
-        return;
-      }
-
-      const items: WholesalePricelistItem[] = [];
+      const cloudMap = new Map<string, Record<string, any>>();
       snapshot.forEach((docSnap) => {
-        const raw = docSnap.data();
-        const defaultMatch = WHOLESALE_PRICELIST.find((w) => w.code === raw.id);
-        const mapped: WholesalePricelistItem = {
-          code: raw.id,
-          name: raw.name || defaultMatch?.name || 'Komoditas Buah MBG',
-          category: (defaultMatch?.category || 'Anggur') as any,
-          categoryEmoji: defaultMatch?.categoryEmoji || '🍎',
-          price: Number(raw.standardPrice || defaultMatch?.price || 100000),
-          unit: raw.unit || defaultMatch?.unit || 'Dus',
-          packaging: raw.specs || defaultMatch?.packaging || 'Dus Segel Standar',
-          image: defaultMatch?.image || 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&w=800&q=80',
-          badge: raw.grade || defaultMatch?.badge,
-          stockDus: Number(raw.minOrderKg || defaultMatch?.stockDus || 20),
-          inStock: typeof raw.isSeasonal === 'boolean' ? !raw.isSeasonal : (defaultMatch?.inStock ?? true),
-        };
-        items.push(mapped);
+        cloudMap.set(docSnap.id, docSnap.data());
       });
 
-      items.sort((a, b) => a.name.localeCompare(b.name));
+      // Always guarantee that all 57 official items are represented with fallback to WHOLESALE_PRICELIST
+      const items: WholesalePricelistItem[] = WHOLESALE_PRICELIST.map((defaultItem) => {
+        const raw = cloudMap.get(defaultItem.code);
+        if (!raw) return defaultItem;
+
+        return {
+          code: defaultItem.code,
+          name: raw.name || defaultItem.name,
+          category: (raw.category || defaultItem.category) as any,
+          categoryEmoji: raw.categoryEmoji || defaultItem.categoryEmoji,
+          price: Number(raw.standardPrice !== undefined ? raw.standardPrice : defaultItem.price),
+          unit: raw.unit || defaultItem.unit,
+          packaging: raw.specs || defaultItem.packaging,
+          image: raw.image || defaultItem.image,
+          badge: raw.grade || defaultItem.badge,
+          stockDus: Number(raw.minOrderKg !== undefined ? raw.minOrderKg : defaultItem.stockDus),
+          inStock: typeof raw.isSeasonal === 'boolean' ? !raw.isSeasonal : defaultItem.inStock,
+        };
+      });
+
+      // Add any additional items custom created in Firestore by Admin
+      cloudMap.forEach((raw, docId) => {
+        if (!WHOLESALE_PRICELIST.some((w) => w.code === docId)) {
+          items.push({
+            code: docId,
+            name: raw.name || 'Komoditas Buah',
+            category: (raw.category || 'Anggur') as any,
+            categoryEmoji: raw.categoryEmoji || '🍎',
+            price: Number(raw.standardPrice || 100000),
+            unit: raw.unit || 'Dus',
+            packaging: raw.specs || 'Dus Segel',
+            image: raw.image || 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&w=800&q=80',
+            badge: raw.grade,
+            stockDus: Number(raw.minOrderKg || 20),
+            inStock: typeof raw.isSeasonal === 'boolean' ? !raw.isSeasonal : true,
+          });
+        }
+      });
+
+      // Seed any missing items to Firestore so cloud database permanently contains all 57 items
+      const missingInFirestore = WHOLESALE_PRICELIST.filter((w) => !cloudMap.has(w.code));
+      if (missingInFirestore.length > 0) {
+        for (const missingItem of missingInFirestore) {
+          saveWholesaleItemToFirestore(missingItem).catch((e) =>
+            console.warn('Auto-sync wholesale item to Firestore failed:', missingItem.code, e)
+          );
+        }
+      }
+
       saveStoredWholesalePricelist(items);
       onUpdate(items);
     },
@@ -196,7 +232,13 @@ export async function saveWholesaleItemToFirestore(item: WholesalePricelistItem)
       minOrderKg: Number(item.stockDus || 10),
       specs: String(item.packaging || 'Dus Segel').slice(0, 200),
       isSeasonal: !item.inStock,
+      category: String(item.category || 'Anggur').slice(0, 50),
+      categoryEmoji: String(item.categoryEmoji || '🍎').slice(0, 10),
     };
+
+    if (item.image && item.image.length <= 450000) {
+      cleanData.image = item.image;
+    }
 
     await setDoc(docRef, cleanData, { merge: true });
   } catch (err) {
@@ -249,7 +291,7 @@ export function subscribeToStoreSettings(
         operatingHours: raw.operatingHours || DEFAULT_STORE_SETTINGS.operatingHours,
         logoUrl: raw.logoUrl || DEFAULT_STORE_SETTINGS.logoUrl,
         hideLoginMenu: DEFAULT_STORE_SETTINGS.hideLoginMenu,
-        farmerImageUrl: DEFAULT_STORE_SETTINGS.farmerImageUrl,
+        farmerImageUrl: raw.farmerImageUrl || DEFAULT_STORE_SETTINGS.farmerImageUrl,
       };
 
       saveStoredSettings(mapped);
@@ -277,12 +319,17 @@ export async function saveStoreSettingsToFirestore(settings: StoreSettings): Pro
       operatingHours: String(settings.operatingHours || '').slice(0, 100),
     };
 
-    if (settings.logoUrl && settings.logoUrl.length <= 500) {
+    if (settings.logoUrl && settings.logoUrl.length <= 450000) {
       cleanData.logoUrl = settings.logoUrl;
+    }
+
+    if (settings.farmerImageUrl && settings.farmerImageUrl.length <= 450000) {
+      cleanData.farmerImageUrl = settings.farmerImageUrl;
     }
 
     await setDoc(docRef, cleanData, { merge: true });
   } catch (err) {
+    console.warn('Sync store settings to cloud error:', err);
     handleFirestoreError(err, OperationType.WRITE, path);
   }
 }

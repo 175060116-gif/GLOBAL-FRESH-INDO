@@ -103,6 +103,8 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
 
   const handleOpenRetailPhoto = (prod: Product) => {
     setPhotoTarget({
+      id: prod.id,
+      code: prod.id,
       name: prod.name,
       category: prod.category === 'lokal' ? 'Lokal Nusantara' : prod.category === 'import' ? 'Impor Premium' : 'Parcel Hampers',
       categoryEmoji: '🍎',
@@ -123,17 +125,17 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           ...match,
           image: newImageUrl,
         });
-        setPhotoUploadToast(`Foto buah [${match.name}] berhasil diperbarui!`);
+        setPhotoUploadToast(`Foto buah [${match.name}] berhasil disimpan ke database!`);
         setTimeout(() => setPhotoUploadToast(null), 3000);
       }
     } else if (photoTargetType === 'retail') {
-      const match = products.find((p) => p.name === photoTarget.name);
+      const match = products.find((p) => (photoTarget.id && p.id === photoTarget.id) || (photoTarget.code && p.id === photoTarget.code) || p.name === photoTarget.name);
       if (match) {
         onUpdateProduct({
           ...match,
           image: newImageUrl,
         });
-        setPhotoUploadToast(`Foto produk [${match.name}] berhasil diperbarui!`);
+        setPhotoUploadToast(`Foto produk [${match.name}] berhasil disimpan ke database!`);
         setTimeout(() => setPhotoUploadToast(null), 3000);
       }
     }
@@ -144,10 +146,10 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
     if (!file || !file.type.startsWith('image/')) return;
     try {
       const compressed = await compressImageFile(file, {
-        maxWidth: 900,
-        maxHeight: 900,
-        quality: 0.78,
-        maxSizeKB: 160,
+        maxWidth: 800,
+        maxHeight: 800,
+        quality: 0.76,
+        maxSizeKB: 130,
       });
       if (onUpdateWholesaleItem) {
         onUpdateWholesaleItem({

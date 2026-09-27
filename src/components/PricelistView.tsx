@@ -65,6 +65,7 @@ export const PricelistView: React.FC<PricelistViewProps> = ({
   // Fruit Photo Upload state
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [photoModalFruit, setPhotoModalFruit] = useState<FruitPhotoTarget | null>(null);
+  const [photoToast, setPhotoToast] = useState<string | null>(null);
 
   const handleOpenPhotoUpload = (item: WholesalePricelistItem) => {
     setPhotoModalFruit({
@@ -89,6 +90,8 @@ export const PricelistView: React.FC<PricelistViewProps> = ({
         if (previewWholesaleItem && previewWholesaleItem.code === match.code) {
           setPreviewWholesaleItem(updated);
         }
+        setPhotoToast(`Foto buah [${match.name}] berhasil disimpan ke database!`);
+        setTimeout(() => setPhotoToast(null), 3500);
       }
     }
     setIsPhotoModalOpen(false);
@@ -1310,7 +1313,7 @@ export const PricelistView: React.FC<PricelistViewProps> = ({
                 onClick={() => {
                   // Generate downloadable CSV formatted for Excel
                   const csvHeaders = 'Kode,Nama Produk,Kategori,Kemasan,Harga Baru\n';
-                  const csvRows = WHOLESALE_PRICELIST.map(i => `"${i.code}","${i.name}","${i.category}","${i.packaging}","Rp ${i.price.toLocaleString('id-ID')}"`).join('\n');
+                  const csvRows = wholesaleItems.map(i => `"${i.code}","${i.name}","${i.category}","${i.packaging}","Rp ${i.price.toLocaleString('id-ID')}"`).join('\n');
                   const blob = new Blob([csvHeaders + csvRows], { type: 'text/csv;charset=utf-8;' });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a');
@@ -1349,6 +1352,19 @@ export const PricelistView: React.FC<PricelistViewProps> = ({
         fruit={photoModalFruit}
         onSave={handleSavePhoto}
       />
+
+      {/* Photo Toast Notification */}
+      {photoToast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-[#17331D] text-white px-5 py-3 rounded-2xl shadow-2xl border border-emerald-500/40 flex items-center gap-3 animate-in slide-in-from-bottom-5 duration-200">
+          <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0">
+            <Check className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-xs font-black block">Foto Berhasil Disimpan</span>
+            <span className="text-[11px] text-emerald-200">{photoToast}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

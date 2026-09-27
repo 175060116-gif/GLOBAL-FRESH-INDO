@@ -410,7 +410,7 @@ export function App() {
         )}
 
         {activeTab === 'fastorder' && (
-          <FastOrderView products={products} storeSettings={storeSettings} />
+          <FastOrderView products={products} wholesaleItems={wholesaleItems} storeSettings={storeSettings} />
         )}
 
         {activeTab === 'b2b' && (

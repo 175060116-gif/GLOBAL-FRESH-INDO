@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StoreSettings, DEFAULT_STORE_SETTINGS } from '../data/storeSettings';
 import { 
   X, Upload, RotateCcw, Check, Store, Phone, 
@@ -23,6 +23,13 @@ export const StoreSettingsModal: React.FC<StoreSettingsModalProps> = ({
   const [logoMode, setLogoMode] = useState<'url' | 'upload'>('url');
   const [showSavedToast, setShowSavedToast] = useState(false);
   const [isCompressingLogo, setIsCompressingLogo] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({ ...settings });
+      setShowSavedToast(false);
+    }
+  }, [isOpen, settings]);
 
   if (!isOpen) return null;
 

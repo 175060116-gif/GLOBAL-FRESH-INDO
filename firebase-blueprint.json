@@ -57,7 +57,7 @@
         "image": {
           "type": "string",
           "description": "URL foto buah",
-          "maxLength": 500
+          "maxLength": 450000
         },
         "isPopular": {
           "type": "boolean",
@@ -134,6 +134,21 @@
         "isSeasonal": {
           "type": "boolean",
           "description": "Apakah komoditas bergantung musim panen"
+        },
+        "category": {
+          "type": "string",
+          "description": "Kategori buah (Anggur, Apel, Jeruk, Kiwi, Lemon, Delima, Pear, Lengkeng, Plum)",
+          "maxLength": 50
+        },
+        "categoryEmoji": {
+          "type": "string",
+          "description": "Emoji kategori buah",
+          "maxLength": 10
+        },
+        "image": {
+          "type": "string",
+          "description": "URL atau data foto buah",
+          "maxLength": 450000
         }
       },
       "required": ["id", "name", "grade", "standardPrice", "unit", "minOrderKg"]
@@ -187,7 +202,12 @@
         "logoUrl": {
           "type": "string",
           "description": "URL foto logo toko",
-          "maxLength": 500
+          "maxLength": 450000
+        },
+        "farmerImageUrl": {
+          "type": "string",
+          "description": "URL atau data gambar foto petani kemitraan / kebun",
+          "maxLength": 450000
         }
       },
       "required": ["id", "storeName", "phone", "phoneOrders", "address"]

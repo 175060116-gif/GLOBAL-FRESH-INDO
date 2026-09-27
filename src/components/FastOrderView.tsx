@@ -3,18 +3,26 @@ import {
   MessageCircle, Send, Copy, Check, Plus, Minus, 
   MapPin, User, Phone, Truck, CreditCard, ShieldCheck, 
   Clock, HelpCircle, ChevronDown, ChevronUp, Sparkles,
-  Store, Building2, Gift
+  Store, Building2, Gift, Search, Package
 } from 'lucide-react';
 import { Product } from '../data/products';
+import { WholesalePricelistItem, WHOLESALE_PRICELIST } from '../data/wholesalePricelist';
 import { StoreSettings } from '../data/storeSettings';
 
 interface FastOrderViewProps {
   products: Product[];
+  wholesaleItems?: WholesalePricelistItem[];
   storeSettings?: StoreSettings;
 }
 
-export const FastOrderView: React.FC<FastOrderViewProps> = ({ products, storeSettings }) => {
+export const FastOrderView: React.FC<FastOrderViewProps> = ({ 
+  products, 
+  wholesaleItems = WHOLESALE_PRICELIST,
+  storeSettings 
+}) => {
   const [activeChannel, setActiveChannel] = useState<'retail' | 'b2b' | 'hampers'>('retail');
+  const [b2bCategory, setB2bCategory] = useState<string>('All');
+  const [b2bSearch, setB2bSearch] = useState<string>('');
   
   // Step 1: Quantities
   const [quantities, setQuantities] = useState<{ [id: string]: number }>({
@@ -50,10 +58,46 @@ export const FastOrderView: React.FC<FastOrderViewProps> = ({ products, storeSet
       .filter(([_, qty]) => qty > 0)
       .map(([id, qty]) => {
         const product = products.find((p) => p.id === id);
-        return { product, qty, total: (product?.retailPrice || 0) * qty };
+        if (product) {
+          return { 
+            id, 
+            name: product.name, 
+            unit: product.unit, 
+            price: product.retailPrice, 
+            qty, 
+            total: product.retailPrice * qty 
+          };
+        }
+        const wholesale = wholesaleItems.find((w) => w.code === id);
+        if (wholesale) {
+          return { 
+            id, 
+            name: `${wholesale.name} (Kode: ${wholesale.code})`, 
+            unit: wholesale.unit, 
+            price: wholesale.price, 
+            qty, 
+            total: wholesale.price * qty 
+          };
+        }
+        return null;
       })
-      .filter((item) => item.product !== undefined);
-  }, [quantities, products]);
+      .filter((item): item is NonNullable<typeof item> => item !== null);
+  }, [quantities, products, wholesaleItems]);
+
+  const filteredB2BItems = useMemo(() => {
+    return wholesaleItems.filter((item) => {
+      if (b2bCategory !== 'All' && item.category !== b2bCategory) return false;
+      if (b2bSearch.trim() !== '') {
+        const q = b2bSearch.toLowerCase();
+        return (
+          item.code.toLowerCase().includes(q) ||
+          item.name.toLowerCase().includes(q) ||
+          item.packaging.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [wholesaleItems, b2bCategory, b2bSearch]);
 
   const subtotal = useMemo(() => {
     return selectedItems.reduce((acc, item) => acc + item.total, 0);
@@ -84,7 +128,7 @@ export const FastOrderView: React.FC<FastOrderViewProps> = ({ products, storeSet
       msg += `_(Belum ada buah yang dipilih)_\n`;
     } else {
       selectedItems.forEach((item, index) => {
-        msg += `${index + 1}. ${item.product?.name} - ${item.qty} ${item.product?.unit} (Rp ${item.total.toLocaleString('id-ID')})\n`;
+        msg += `${index + 1}. ${item.name} - ${item.qty} ${item.unit} (Rp ${item.total.toLocaleString('id-ID')})\n`;
       });
     }
 
@@ -202,68 +246,193 @@ export const FastOrderView: React.FC<FastOrderViewProps> = ({ products, storeSet
               <div className="w-8 h-8 rounded-full bg-[#087F23] text-white font-black text-sm flex items-center justify-center">
                 1
               </div>
-              <div>
+              <div className="flex-1 min-w-0">
                 <h2 className="font-extrabold text-base text-[#17331D]">
-                  LANGKAH 1: Pilih Aneka Buah Segar
+                  LANGKAH 1: {activeChannel === 'b2b' ? 'Pilih Komoditas Grosir / Dus (57 Item Resmi)' : 'Pilih Aneka Buah Segar'}
                 </h2>
                 <p className="text-xs text-[#6B7D70]">
-                  Tentukan jumlah kilogram / pack yang ingin dipesan hari ini.
+                  {activeChannel === 'b2b' 
+                    ? 'Pilih karton/dus komoditas buah impor & lokal dengan kode SKU resmi.' 
+                    : 'Tentukan jumlah kilogram / pack yang ingin dipesan hari ini.'}
                 </p>
               </div>
             </div>
 
+            {/* If B2B channel, show Wholesale Category Filter & Search Bar */}
+            {activeChannel === 'b2b' && (
+              <div className="space-y-3 pb-2 border-b border-[#E2EBD8]">
+                {/* Category selector */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                  {[
+                    { id: 'All', label: 'Semua (57)', emoji: '✨' },
+                    { id: 'Anggur', label: 'Anggur (15)', emoji: '🍇' },
+                    { id: 'Apel', label: 'Apel (17)', emoji: '🍎' },
+                    { id: 'Jeruk', label: 'Jeruk (4)', emoji: '🍊' },
+                    { id: 'Kiwi', label: 'Kiwi (1)', emoji: '🥝' },
+                    { id: 'Lemon', label: 'Lemon (2)', emoji: '🍋' },
+                    { id: 'Delima', label: 'Delima (1)', emoji: '❤️' },
+                    { id: 'Pear', label: 'Pear (4)', emoji: '🍐' },
+                    { id: 'Lengkeng', label: 'Lengkeng (11)', emoji: '🟤' },
+                    { id: 'Plum', label: 'Plum (2)', emoji: '🟣' },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setB2bCategory(cat.id)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
+                        b2bCategory === cat.id
+                          ? 'bg-[#087F23] text-white shadow-xs'
+                          : 'bg-[#F7FAF5] text-[#17331D] hover:bg-[#E8F5E4] border border-[#E2EBD8]'
+                      }`}
+                    >
+                      <span>{cat.emoji}</span>
+                      <span>{cat.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Search */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Cari Kode Buah (cth: 2021, 11174) atau Nama..."
+                    value={b2bSearch}
+                    onChange={(e) => setB2bSearch(e.target.value)}
+                    className="w-full bg-[#F7FAF5] border border-[#CDE0C4] rounded-xl py-2 pl-9 pr-3 text-xs text-[#17331D] font-medium focus:outline-none focus:ring-2 focus:ring-[#087F23] focus:bg-white"
+                  />
+                  <Search className="w-4 h-4 text-[#6B7D70] absolute left-3 top-1/2 -translate-y-1/2" />
+                  {b2bSearch && (
+                    <button 
+                      onClick={() => setB2bSearch('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 text-xs"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Grid of fruit items with +/- stepper */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {products.map((p) => {
-                const qty = quantities[p.id] || 0;
-                return (
-                  <div
-                    key={p.id}
-                    className={`fruit-card-interactive p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 group ${
-                      qty > 0
-                        ? 'bg-[#F0F9ED] border-[#087F23] shadow-xs'
-                        : 'bg-[#F7FAF5] border-[#E2EBD8] hover:border-[#087F23]'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="fruit-photo-sheen-container w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-white bg-neutral-100 shadow-2xs">
-                        <img
-                          src={p.image}
-                          alt={p.name}
-                          className="w-full h-full object-cover group-hover:scale-115 transition-transform duration-500 ease-out"
-                        />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-xs font-bold text-[#17331D] truncate group-hover:text-[#087F23] transition-colors">{p.name}</div>
-                        <div className="text-[11px] font-extrabold text-[#087F23]">
-                          Rp {p.retailPrice.toLocaleString('id-ID')}
-                          <span className="text-[9px] text-[#6B7D70] font-normal">/{p.unit}</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 max-h-[520px] overflow-y-auto pr-1">
+              {activeChannel === 'b2b' ? (
+                filteredB2BItems.map((item) => {
+                  const qty = quantities[item.code] || 0;
+                  return (
+                    <div
+                      key={item.code}
+                      className={`fruit-card-interactive p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 group ${
+                        qty > 0
+                          ? 'bg-[#F0F9ED] border-[#087F23] shadow-xs'
+                          : 'bg-[#F7FAF5] border-[#E2EBD8] hover:border-[#087F23]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="fruit-photo-sheen-container w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-white bg-neutral-100 shadow-2xs relative">
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-full h-full object-cover group-hover:scale-115 transition-transform duration-500 ease-out"
+                          />
+                          <span className="absolute bottom-0.5 left-0.5 text-[8px] bg-black/60 text-white px-1 rounded">
+                            {item.categoryEmoji}
+                          </span>
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="bg-[#17331D] text-[#FFD54F] font-mono text-[9px] font-black px-1.5 py-0.2 rounded">
+                              {item.code}
+                            </span>
+                            <span className="text-[10px] text-[#6B7D70] truncate">{item.category}</span>
+                          </div>
+                          <div className="text-xs font-bold text-[#17331D] truncate group-hover:text-[#087F23] transition-colors">
+                            {item.name}
+                          </div>
+                          <div className="text-[11px] font-extrabold text-[#087F23]">
+                            Rp {item.price.toLocaleString('id-ID')}
+                            <span className="text-[9px] text-[#6B7D70] font-normal">/{item.unit}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Stepper */}
-                    <div className="flex items-center bg-white rounded-xl border border-[#CDE0C4] p-0.5 shrink-0 shadow-xs">
-                      <button
-                        onClick={() => handleQtyChange(p.id, -1)}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-[#17331D] hover:bg-neutral-100 disabled:opacity-30"
-                        disabled={qty === 0}
-                      >
-                        <Minus className="w-3 h-3" />
-                      </button>
-                      <span className="w-7 text-center text-xs font-black text-[#17331D]">
-                        {qty}
-                      </span>
-                      <button
-                        onClick={() => handleQtyChange(p.id, 1)}
-                        className="w-7 h-7 rounded-lg bg-[#087F23] text-white flex items-center justify-center hover:bg-[#005500]"
-                      >
-                        <Plus className="w-3 h-3" />
-                      </button>
+                      {/* Stepper */}
+                      <div className="flex items-center bg-white rounded-xl border border-[#CDE0C4] p-0.5 shrink-0 shadow-xs">
+                        <button
+                          type="button"
+                          onClick={() => handleQtyChange(item.code, -1)}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-[#17331D] hover:bg-neutral-100 disabled:opacity-30"
+                          disabled={qty === 0}
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="w-7 text-center text-xs font-black text-[#17331D]">
+                          {qty}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleQtyChange(item.code, 1)}
+                          className="w-7 h-7 rounded-lg bg-[#087F23] text-white flex items-center justify-center hover:bg-[#005500]"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              ) : (
+                products.map((p) => {
+                  const qty = quantities[p.id] || 0;
+                  return (
+                    <div
+                      key={p.id}
+                      className={`fruit-card-interactive p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 group ${
+                        qty > 0
+                          ? 'bg-[#F0F9ED] border-[#087F23] shadow-xs'
+                          : 'bg-[#F7FAF5] border-[#E2EBD8] hover:border-[#087F23]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="fruit-photo-sheen-container w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-white bg-neutral-100 shadow-2xs">
+                          <img
+                            src={p.image}
+                            alt={p.name}
+                            className="w-full h-full object-cover group-hover:scale-115 transition-transform duration-500 ease-out"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold text-[#17331D] truncate group-hover:text-[#087F23] transition-colors">{p.name}</div>
+                          <div className="text-[11px] font-extrabold text-[#087F23]">
+                            Rp {p.retailPrice.toLocaleString('id-ID')}
+                            <span className="text-[9px] text-[#6B7D70] font-normal">/{p.unit}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Stepper */}
+                      <div className="flex items-center bg-white rounded-xl border border-[#CDE0C4] p-0.5 shrink-0 shadow-xs">
+                        <button
+                          type="button"
+                          onClick={() => handleQtyChange(p.id, -1)}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-[#17331D] hover:bg-neutral-100 disabled:opacity-30"
+                          disabled={qty === 0}
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="w-7 text-center text-xs font-black text-[#17331D]">
+                          {qty}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleQtyChange(p.id, 1)}
+                          className="w-7 h-7 rounded-lg bg-[#087F23] text-white flex items-center justify-center hover:bg-[#005500]"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
 
@@ -404,11 +573,11 @@ export const FastOrderView: React.FC<FastOrderViewProps> = ({ products, storeSet
                 </div>
               ) : (
                 selectedItems.map((item) => (
-                  <div key={item.product?.id} className="flex justify-between items-center text-xs py-1 border-b border-neutral-100">
+                  <div key={item.id} className="flex justify-between items-center text-xs py-1 border-b border-neutral-100">
                     <div>
-                      <span className="font-bold text-[#17331D]">{item.product?.name}</span>
+                      <span className="font-bold text-[#17331D]">{item.name}</span>
                       <span className="text-[10px] text-[#6B7D70] block">
-                        {item.qty} {item.product?.unit} × Rp {item.product?.retailPrice.toLocaleString('id-ID')}
+                        {item.qty} {item.unit} × Rp {item.price.toLocaleString('id-ID')}
                       </span>
                     </div>
                     <span className="font-extrabold text-[#087F23]">

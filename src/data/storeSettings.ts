@@ -31,11 +31,11 @@ export const getStoredSettings = (): StoreSettings => {
     const data = localStorage.getItem(SETTINGS_KEY);
     if (data) {
       const parsed = JSON.parse(data);
-      // If farmerImageUrl or logoUrl is an excessively huge legacy uncompressed string (> 250KB), sanitize it to protect quota
-      if (parsed.farmerImageUrl && parsed.farmerImageUrl.length > 250000) {
+      // If farmerImageUrl or logoUrl is an excessively huge legacy uncompressed string (> 350KB), sanitize it to protect quota
+      if (parsed.farmerImageUrl && parsed.farmerImageUrl.length > 350000) {
         parsed.farmerImageUrl = DEFAULT_STORE_SETTINGS.farmerImageUrl;
       }
-      if (parsed.logoUrl && parsed.logoUrl.length > 250000) {
+      if (parsed.logoUrl && parsed.logoUrl.length > 350000) {
         parsed.logoUrl = DEFAULT_STORE_SETTINGS.logoUrl;
       }
       return { ...DEFAULT_STORE_SETTINGS, ...parsed };
