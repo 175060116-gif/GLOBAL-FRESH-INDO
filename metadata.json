@@ -1,0 +1,6 @@
+{
+  "name": "Global Fresh Indo - Toko & Distributor Buah Segar",
+  "description": "Platform e-commerce dan distributor buah segar terpercaya untuk ritel, hotel, resto, kafe (Horeka), dan hampers buah premium.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
