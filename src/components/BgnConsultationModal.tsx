@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { StoreSettings } from '../data/storeSettings';
 import { FRUIT_PACKAGE_OPTIONS } from './NutritionPortionCalculator';
+import { saveConsultationInquiry } from '../services/firebaseService';
 
 interface BgnConsultationModalProps {
   isOpen: boolean;
@@ -59,6 +60,21 @@ export const BgnConsultationModal: React.FC<BgnConsultationModalProps> = ({
 
   const handleSendWa = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Save inquiry to Firestore database for permanent tracking
+    saveConsultationInquiry({
+      schoolName: institutionName || 'SPPG / Dapur MBG',
+      contactPerson: picName || 'PIC',
+      whatsapp: picPhone || '-',
+      district: deliveryArea,
+      studentCount: parsedPortions,
+      portionGrams,
+      packageId: selectedFruit,
+      customRequest: customFruitRequest.trim() ? `${customFruitRequest.trim()} | Frekuensi: ${deliveryFrequency} | Catatan: ${notes}` : `Frekuensi: ${deliveryFrequency} | Catatan: ${notes}`,
+    }).catch((err) => {
+      console.warn('Could not save consultation inquiry to Firestore:', err);
+    });
+
     const waNumber = storeSettings?.whatsappNumber || '6285284633214';
     const message = `*FORM KONSULTASI PENGADAAN BUAH BGN (BADAN GIZI NASIONAL)*
 *Program Makan Bergizi Gratis (MBG)*

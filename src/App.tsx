@@ -36,6 +36,17 @@ import {
   resetStoredWholesalePricelist 
 } from './data/wholesalePricelist';
 import { 
+  testFirestoreConnection,
+  subscribeToProducts,
+  saveProductToFirestore,
+  deleteProductFromFirestore,
+  subscribeToWholesale,
+  saveWholesaleItemToFirestore,
+  deleteWholesaleItemFromFirestore,
+  subscribeToStoreSettings,
+  saveStoreSettingsToFirestore
+} from './services/firebaseService';
+import { 
   Home, FileText, MessageCircle, ShoppingBag, 
   Truck, LayoutDashboard, Phone, Heart 
 } from 'lucide-react';
@@ -91,6 +102,35 @@ export function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeTab]);
 
+  // Firestore Real-Time Subscriptions & Connection Check
+  useEffect(() => {
+    testFirestoreConnection();
+
+    const unsubProducts = subscribeToProducts((cloudProducts) => {
+      if (cloudProducts && cloudProducts.length > 0) {
+        setProducts(cloudProducts);
+      }
+    });
+
+    const unsubWholesale = subscribeToWholesale((cloudItems) => {
+      if (cloudItems && cloudItems.length > 0) {
+        setWholesaleItems(cloudItems);
+      }
+    });
+
+    const unsubSettings = subscribeToStoreSettings((cloudSettings) => {
+      if (cloudSettings) {
+        setStoreSettings(cloudSettings);
+      }
+    });
+
+    return () => {
+      unsubProducts();
+      unsubWholesale();
+      unsubSettings();
+    };
+  }, []);
+
   // Secret Keyboard Shortcut: Ctrl + Shift + A (or Cmd + Shift + A on Mac)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -135,6 +175,7 @@ export function App() {
       saveStoredProducts(next);
       return next;
     });
+    saveProductToFirestore(updated).catch((err) => console.warn('Sync product to cloud failed:', err));
     // Update product in cart if present
     setCart((prev) =>
       prev.map((item) =>
@@ -151,6 +192,7 @@ export function App() {
       saveStoredProducts(next);
       return next;
     });
+    saveProductToFirestore(newProd).catch((err) => console.warn('Sync new product to cloud failed:', err));
   };
 
   const handleDeleteProduct = (productId: string) => {
@@ -159,6 +201,7 @@ export function App() {
       saveStoredProducts(next);
       return next;
     });
+    deleteProductFromFirestore(productId).catch((err) => console.warn('Delete product from cloud failed:', err));
     setCart((prev) => prev.filter((item) => item.product.id !== productId));
   };
 
@@ -174,6 +217,7 @@ export function App() {
       saveStoredWholesalePricelist(next);
       return next;
     });
+    saveWholesaleItemToFirestore(updated).catch((err) => console.warn('Sync wholesale item to cloud failed:', err));
   };
 
   const handleAddWholesaleItem = (newItem: WholesalePricelistItem) => {
@@ -182,6 +226,7 @@ export function App() {
       saveStoredWholesalePricelist(next);
       return next;
     });
+    saveWholesaleItemToFirestore(newItem).catch((err) => console.warn('Sync new wholesale item to cloud failed:', err));
   };
 
   const handleDeleteWholesaleItem = (code: string) => {
@@ -190,6 +235,7 @@ export function App() {
       saveStoredWholesalePricelist(next);
       return next;
     });
+    deleteWholesaleItemFromFirestore(code).catch((err) => console.warn('Delete wholesale item from cloud failed:', err));
   };
 
   const handleResetWholesaleItems = () => {
@@ -202,7 +248,9 @@ export function App() {
       const next = prev.map((item) => {
         if (item.code === code) {
           const nextStock = (item.stockDus || 0) + additionalDus;
-          return { ...item, stockDus: nextStock, inStock: nextStock > 0 };
+          const updatedItem = { ...item, stockDus: nextStock, inStock: nextStock > 0 };
+          saveWholesaleItemToFirestore(updatedItem).catch((err) => console.warn('Sync restock to cloud failed:', err));
+          return updatedItem;
         }
         return item;
       });
@@ -214,6 +262,7 @@ export function App() {
   const handleUpdateStoreSettings = (newSettings: StoreSettings) => {
     setStoreSettings(newSettings);
     saveStoredSettings(newSettings);
+    saveStoreSettingsToFirestore(newSettings).catch((err) => console.warn('Sync store settings to cloud failed:', err));
   };
 
   const handleEditBusinessUnit = (card: BusinessUnitCard) => {

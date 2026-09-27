@@ -1,0 +1,276 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Katalog buah segar ritel dan grosir Global Fresh Indo",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID unik produk buah",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Nama buah segar",
+          "maxLength": 100
+        },
+        "category": {
+          "type": "string",
+          "description": "Kategori buah (Lokal, Impor, MBG Rekomendasi, dll)",
+          "maxLength": 50
+        },
+        "price": {
+          "type": "number",
+          "description": "Harga per satuan unit"
+        },
+        "unit": {
+          "type": "string",
+          "description": "Satuan penjualan (kg, pack, dus, keranjang)",
+          "maxLength": 30
+        },
+        "minOrder": {
+          "type": "string",
+          "description": "Minimal pemesanan",
+          "maxLength": 50
+        },
+        "stock": {
+          "type": "number",
+          "description": "Stok ketersediaan"
+        },
+        "description": {
+          "type": "string",
+          "description": "Deskripsi rasa, mutu, dan spesifikasi",
+          "maxLength": 500
+        },
+        "origin": {
+          "type": "string",
+          "description": "Daerah asal buah / kebun",
+          "maxLength": 100
+        },
+        "grade": {
+          "type": "string",
+          "description": "Tingkat mutu / grade kualitas buah",
+          "maxLength": 30
+        },
+        "image": {
+          "type": "string",
+          "description": "URL foto buah",
+          "maxLength": 500
+        },
+        "isPopular": {
+          "type": "boolean",
+          "description": "Apakah produk unggulan / terlaris"
+        },
+        "isAvailable": {
+          "type": "boolean",
+          "description": "Status ketersediaan stok hari ini"
+        }
+      },
+      "required": ["id", "name", "category", "price", "unit", "isAvailable"]
+    },
+    "WholesaleItem": {
+      "title": "WholesaleItem",
+      "description": "Daftar harga grosir standar program Makan Bergizi Gratis (MBG)",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID unik item grosir",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Nama komoditas buah grosir",
+          "maxLength": 100
+        },
+        "grade": {
+          "type": "string",
+          "description": "Grade spesifikasi mutu",
+          "maxLength": 30
+        },
+        "specs": {
+          "type": "string",
+          "description": "Spesifikasi ukuran dan gramatur per butir",
+          "maxLength": 200
+        },
+        "pricePerKgMin": {
+          "type": "number",
+          "description": "Harga grosir batas bawah per kg"
+        },
+        "pricePerKgMax": {
+          "type": "number",
+          "description": "Harga grosir batas atas per kg"
+        },
+        "standardPrice": {
+          "type": "number",
+          "description": "Harga acuan standar kontrak"
+        },
+        "unit": {
+          "type": "string",
+          "description": "Satuan grosir (kg, peti, krat)",
+          "maxLength": 30
+        },
+        "minOrderKg": {
+          "type": "number",
+          "description": "Minimal order dalam satuan kilogram"
+        },
+        "sourceRegion": {
+          "type": "string",
+          "description": "Wilayah sentra perkebunan petani mitra",
+          "maxLength": 100
+        },
+        "bgnSuitability": {
+          "type": "string",
+          "description": "Tingkat kesesuaian untuk menu MBG",
+          "maxLength": 100
+        },
+        "shelfLifeDays": {
+          "type": "number",
+          "description": "Daya tahan kesegaran dalam suhu ruang / chiller (hari)"
+        },
+        "isSeasonal": {
+          "type": "boolean",
+          "description": "Apakah komoditas bergantung musim panen"
+        }
+      },
+      "required": ["id", "name", "grade", "standardPrice", "unit", "minOrderKg"]
+    },
+    "StoreSetting": {
+      "title": "StoreSetting",
+      "description": "Pengaturan informasi operasional dan profil toko Global Fresh Indo",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID unik pengaturan (misal: 'main')",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "storeName": {
+          "type": "string",
+          "description": "Nama resmi toko / badan usaha",
+          "maxLength": 100
+        },
+        "tagline": {
+          "type": "string",
+          "description": "Slogan bisnis",
+          "maxLength": 200
+        },
+        "address": {
+          "type": "string",
+          "description": "Alamat fisik gudang / toko",
+          "maxLength": 300
+        },
+        "phone": {
+          "type": "string",
+          "description": "Nomor WhatsApp informasi umum",
+          "maxLength": 30
+        },
+        "phoneOrders": {
+          "type": "string",
+          "description": "Nomor WhatsApp khusus pesanan darurat / MBG",
+          "maxLength": 30
+        },
+        "operatingHours": {
+          "type": "string",
+          "description": "Jam buka operasional",
+          "maxLength": 100
+        },
+        "operationalDays": {
+          "type": "string",
+          "description": "Hari operasional",
+          "maxLength": 100
+        },
+        "logoUrl": {
+          "type": "string",
+          "description": "URL foto logo toko",
+          "maxLength": 500
+        }
+      },
+      "required": ["id", "storeName", "phone", "phoneOrders", "address"]
+    },
+    "ConsultationInquiry": {
+      "title": "ConsultationInquiry",
+      "description": "Formulir permohonan konsultasi porsi gizi buah & kontrak SPPG MBG",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID unik tiket konsultasi",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "schoolName": {
+          "type": "string",
+          "description": "Nama sekolah, yayasan, atau dapur SPPG",
+          "maxLength": 150
+        },
+        "contactPerson": {
+          "type": "string",
+          "description": "Nama narahubung / PIC",
+          "maxLength": 100
+        },
+        "whatsapp": {
+          "type": "string",
+          "description": "Nomor kontak WhatsApp",
+          "maxLength": 30
+        },
+        "district": {
+          "type": "string",
+          "description": "Wilayah kecamatan / kabupaten pengiriman",
+          "maxLength": 100
+        },
+        "studentCount": {
+          "type": "number",
+          "description": "Jumlah target porsi / penerima manfaat"
+        },
+        "portionGrams": {
+          "type": "number",
+          "description": "Gramatur standar buah per porsi siswa"
+        },
+        "packageId": {
+          "type": "string",
+          "description": "Paket menu rekomendasi yang dipilih",
+          "maxLength": 80
+        },
+        "customRequest": {
+          "type": "string",
+          "description": "Catatan permintaan khusus atau jadwal rotasi",
+          "maxLength": 500
+        },
+        "status": {
+          "type": "string",
+          "description": "Status tiket (baru, diproses, selesai)",
+          "maxLength": 30
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp ISO waktu pengiriman",
+          "maxLength": 50
+        }
+      },
+      "required": ["id", "schoolName", "contactPerson", "whatsapp", "studentCount", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Koleksi katalog buah segar untuk ritel dan partai besar"
+    },
+    "/wholesalePricelist/{itemId}": {
+      "schema": "WholesaleItem",
+      "description": "Koleksi daftar harga acuan grosir pasokan Makan Bergizi Gratis (MBG)"
+    },
+    "/storeSettings/{settingId}": {
+      "schema": "StoreSetting",
+      "description": "Dokumen informasi konfigurasi toko dan nomor kontak WhatsApp"
+    },
+    "/consultationInquiries/{inquiryId}": {
+      "schema": "ConsultationInquiry",
+      "description": "Koleksi permohonan konsultasi gizi dan pemesanan buah MBG dari sekolah / SPPG"
+    }
+  }
+}

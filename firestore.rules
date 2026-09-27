@@ -1,0 +1,104 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 64 && id.matches('^[a-zA-Z0-9_-]+$');
+    }
+
+    function isValidProduct(data) {
+      return data.keys().hasAll(['id', 'name', 'category', 'price', 'unit', 'isAvailable'])
+        && data.id is string && data.id.size() > 0 && data.id.size() <= 64
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.category is string && data.category.size() <= 50
+        && (data.price is int || data.price is float) && data.price >= 0
+        && data.unit is string && data.unit.size() <= 30
+        && data.isAvailable is bool
+        && (!('description' in data) || (data.description is string && data.description.size() <= 500))
+        && (!('origin' in data) || (data.origin is string && data.origin.size() <= 100))
+        && (!('grade' in data) || (data.grade is string && data.grade.size() <= 30))
+        && (!('image' in data) || (data.image is string && data.image.size() <= 500))
+        && (!('stock' in data) || ((data.stock is int || data.stock is float) && data.stock >= 0))
+        && (!('minOrder' in data) || (data.minOrder is string && data.minOrder.size() <= 50))
+        && (!('isPopular' in data) || data.isPopular is bool);
+    }
+
+    function isValidWholesaleItem(data) {
+      return data.keys().hasAll(['id', 'name', 'grade', 'standardPrice', 'unit', 'minOrderKg'])
+        && data.id is string && data.id.size() > 0 && data.id.size() <= 64
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.grade is string && data.grade.size() <= 30
+        && (data.standardPrice is int || data.standardPrice is float) && data.standardPrice >= 0
+        && data.unit is string && data.unit.size() <= 30
+        && (data.minOrderKg is int || data.minOrderKg is float) && data.minOrderKg >= 0
+        && (!('specs' in data) || (data.specs is string && data.specs.size() <= 200))
+        && (!('pricePerKgMin' in data) || ((data.pricePerKgMin is int || data.pricePerKgMin is float) && data.pricePerKgMin >= 0))
+        && (!('pricePerKgMax' in data) || ((data.pricePerKgMax is int || data.pricePerKgMax is float) && data.pricePerKgMax >= 0))
+        && (!('sourceRegion' in data) || (data.sourceRegion is string && data.sourceRegion.size() <= 100))
+        && (!('bgnSuitability' in data) || (data.bgnSuitability is string && data.bgnSuitability.size() <= 100))
+        && (!('shelfLifeDays' in data) || ((data.shelfLifeDays is int || data.shelfLifeDays is float) && data.shelfLifeDays >= 0))
+        && (!('isSeasonal' in data) || data.isSeasonal is bool);
+    }
+
+    function isValidStoreSetting(data) {
+      return data.keys().hasAll(['id', 'storeName', 'phone', 'phoneOrders', 'address'])
+        && data.id is string && data.id.size() > 0 && data.id.size() <= 64
+        && data.storeName is string && data.storeName.size() > 0 && data.storeName.size() <= 100
+        && data.phone is string && data.phone.size() <= 30
+        && data.phoneOrders is string && data.phoneOrders.size() <= 30
+        && data.address is string && data.address.size() <= 300
+        && (!('tagline' in data) || (data.tagline is string && data.tagline.size() <= 200))
+        && (!('operatingHours' in data) || (data.operatingHours is string && data.operatingHours.size() <= 100))
+        && (!('operationalDays' in data) || (data.operationalDays is string && data.operationalDays.size() <= 100))
+        && (!('logoUrl' in data) || (data.logoUrl is string && data.logoUrl.size() <= 500));
+    }
+
+    function isValidConsultation(data) {
+      return data.keys().hasAll(['id', 'schoolName', 'contactPerson', 'whatsapp', 'studentCount', 'status', 'createdAt'])
+        && data.id is string && data.id.size() > 0 && data.id.size() <= 64
+        && data.schoolName is string && data.schoolName.size() > 0 && data.schoolName.size() <= 150
+        && data.contactPerson is string && data.contactPerson.size() > 0 && data.contactPerson.size() <= 100
+        && data.whatsapp is string && data.whatsapp.size() > 0 && data.whatsapp.size() <= 30
+        && (data.studentCount is int || data.studentCount is float) && data.studentCount >= 0
+        && data.status is string && data.status.size() <= 30
+        && data.createdAt is string && data.createdAt.size() <= 50
+        && (!('portionGrams' in data) || ((data.portionGrams is int || data.portionGrams is float) && data.portionGrams >= 0))
+        && (!('packageId' in data) || (data.packageId is string && data.packageId.size() <= 80))
+        && (!('customRequest' in data) || (data.customRequest is string && data.customRequest.size() <= 500));
+    }
+
+    // Katalog Buah Segar
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(productId) && isValidProduct(request.resource.data);
+      allow update: if isSignedIn() && isValidId(productId) && isValidProduct(request.resource.data);
+      allow delete: if isSignedIn() && isValidId(productId);
+    }
+
+    // Daftar Harga Grosir MBG
+    match /wholesalePricelist/{itemId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(itemId) && isValidWholesaleItem(request.resource.data);
+      allow update: if isSignedIn() && isValidId(itemId) && isValidWholesaleItem(request.resource.data);
+      allow delete: if isSignedIn() && isValidId(itemId);
+    }
+
+    // Pengaturan Toko
+    match /storeSettings/{settingId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(settingId) && isValidStoreSetting(request.resource.data);
+      allow update: if isSignedIn() && isValidId(settingId) && isValidStoreSetting(request.resource.data);
+      allow delete: if isSignedIn() && isValidId(settingId);
+    }
+
+    // Permohonan Konsultasi Gizi MBG
+    match /consultationInquiries/{inquiryId} {
+      allow create: if isValidId(inquiryId) && isValidConsultation(request.resource.data);
+      allow read, update, delete: if isSignedIn() && isValidId(inquiryId);
+    }
+  }
+}

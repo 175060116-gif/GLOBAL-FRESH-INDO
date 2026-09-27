@@ -368,9 +368,13 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
       {/* Top Header & Store Control Bar */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-[#E2EBD8] shadow-xs">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-bold text-[#087F23] uppercase tracking-wider bg-[#E8F5E4] px-2.5 py-0.5 rounded-full">
               Pusat Kontrol & Manajemen Stok Toko
+            </span>
+            <span className="text-xs font-semibold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Firestore Cloud Database: Terhubung Real-Time
             </span>
             <span className="text-xs text-[#6B7D70]">
               ID Toko: GFI-{storeSettings.city.toUpperCase()}
