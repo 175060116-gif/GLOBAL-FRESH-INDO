@@ -278,6 +278,28 @@
         }
       },
       "required": ["id", "schoolName", "contactPerson", "whatsapp", "studentCount", "status", "createdAt"]
+    },
+    "BusinessUnit": {
+      "title": "BusinessUnit",
+      "description": "Kartu unit bisnis utama (Ritel, B2B, dan BGN)",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID kartu unit (retail, b2b, bgn)",
+          "maxLength": 64
+        },
+        "badgeLeft": { "type": "string", "maxLength": 100 },
+        "badgeRight": { "type": "string", "maxLength": 100 },
+        "title": { "type": "string", "maxLength": 150 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "imageUrl": { "type": "string", "maxLength": 450000 },
+        "checklist": { "type": "array", "items": { "type": "string" } },
+        "actionLabel": { "type": "string", "maxLength": 100 },
+        "bannerTitle": { "type": "string", "maxLength": 150 },
+        "bannerSubtitle": { "type": "string", "maxLength": 150 }
+      },
+      "required": ["id", "title", "description"]
     }
   },
   "firestore": {
@@ -296,6 +318,10 @@
     "/consultationInquiries/{inquiryId}": {
       "schema": "ConsultationInquiry",
       "description": "Koleksi permohonan konsultasi gizi dan pemesanan buah MBG dari sekolah / SPPG"
+    },
+    "/businessUnits/{unitId}": {
+      "schema": "BusinessUnit",
+      "description": "Koleksi kartu unit bisnis (retail, b2b, bgn)"
     }
   }
 }

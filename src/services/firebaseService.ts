@@ -9,6 +9,7 @@ import { db, handleFirestoreError, OperationType, testFirestoreConnection } from
 import { Product, PRODUCTS_DATA, saveStoredProducts } from '../data/products';
 import { WholesalePricelistItem, WHOLESALE_PRICELIST, saveStoredWholesalePricelist } from '../data/wholesalePricelist';
 import { StoreSettings, DEFAULT_STORE_SETTINGS, saveStoredSettings } from '../data/storeSettings';
+import { BusinessUnitCard, DEFAULT_BUSINESS_UNITS, saveStoredBusinessUnits } from '../data/businessUnits';
 
 export { testFirestoreConnection };
 
@@ -371,6 +372,100 @@ export async function saveConsultationInquiry(data: {
     await setDoc(docRef, payload);
     return id;
   } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, path);
+  }
+}
+
+// 5. BUSINESS UNITS (CARDS ON HOMEPAGE: RETAIL, B2B, BGN)
+export function subscribeToBusinessUnits(
+  onUpdate: (units: BusinessUnitCard[]) => void,
+  onError?: (err: Error) => void
+): () => void {
+  const collectionRef = collection(db, 'businessUnits');
+  return onSnapshot(
+    collectionRef,
+    async (snapshot) => {
+      if (snapshot.empty) {
+        console.log('Business units in Cloud Firestore are empty. Seeding defaults...');
+        try {
+          for (const unit of DEFAULT_BUSINESS_UNITS) {
+            await setDoc(doc(db, 'businessUnits', unit.id), {
+              id: unit.id,
+              badgeLeft: unit.badgeLeft || '',
+              badgeRight: unit.badgeRight || '',
+              title: unit.title,
+              description: unit.description,
+              imageUrl: unit.imageUrl || '',
+              checklist: unit.checklist || [],
+              actionLabel: unit.actionLabel || '',
+              bannerTitle: unit.bannerTitle || '',
+              bannerSubtitle: unit.bannerSubtitle || ''
+            });
+          }
+        } catch (seedErr) {
+          console.warn('Seeding business units warning:', seedErr);
+        }
+        return;
+      }
+
+      const list: BusinessUnitCard[] = [];
+      snapshot.forEach((d) => {
+        const data = d.data();
+        list.push({
+          id: data.id as 'retail' | 'b2b' | 'bgn',
+          badgeLeft: data.badgeLeft || '',
+          badgeRight: data.badgeRight || '',
+          title: data.title || '',
+          description: data.description || '',
+          imageUrl: data.imageUrl || '',
+          checklist: Array.isArray(data.checklist) ? data.checklist : [],
+          actionLabel: data.actionLabel || '',
+          bannerTitle: data.bannerTitle || '',
+          bannerSubtitle: data.bannerSubtitle || '',
+        });
+      });
+
+      // Preserve canonical order: retail, b2b, bgn
+      const order = ['retail', 'b2b', 'bgn'];
+      list.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+
+      saveStoredBusinessUnits(list);
+      onUpdate(list);
+    },
+    (err) => {
+      console.warn('Business units snapshot error:', err);
+      onError?.(err);
+      handleFirestoreError(err, OperationType.GET, 'businessUnits');
+    }
+  );
+}
+
+export async function saveBusinessUnitToFirestore(unit: BusinessUnitCard): Promise<void> {
+  const path = `businessUnits/${unit.id}`;
+  try {
+    const docRef = doc(db, 'businessUnits', unit.id);
+    const payload: Record<string, any> = {
+      id: unit.id,
+      title: String(unit.title).slice(0, 150),
+      description: String(unit.description).slice(0, 1500),
+      badgeLeft: String(unit.badgeLeft || '').slice(0, 100),
+      actionLabel: String(unit.actionLabel || '').slice(0, 100),
+      checklist: Array.isArray(unit.checklist) ? unit.checklist.slice(0, 10) : [],
+    };
+
+    if (unit.badgeRight) payload.badgeRight = String(unit.badgeRight).slice(0, 100);
+    if (unit.bannerTitle) payload.bannerTitle = String(unit.bannerTitle).slice(0, 150);
+    if (unit.bannerSubtitle) payload.bannerSubtitle = String(unit.bannerSubtitle).slice(0, 150);
+    if (unit.imageUrl && unit.imageUrl.length <= 450000) {
+      payload.imageUrl = unit.imageUrl;
+    } else {
+      payload.imageUrl = '';
+    }
+
+    await setDoc(docRef, payload, { merge: true });
+    console.log(`Business unit [${unit.id}] photo and details saved to Firestore!`);
+  } catch (err) {
+    console.error('Failed to save business unit to Firestore:', err);
     handleFirestoreError(err, OperationType.WRITE, path);
   }
 }

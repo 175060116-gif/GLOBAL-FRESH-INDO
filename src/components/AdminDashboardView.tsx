@@ -156,12 +156,33 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           ...item,
           image: compressed,
         });
-        setPhotoUploadToast(`Foto buah [${item.name}] berhasil diunggah!`);
+        setPhotoUploadToast(`Foto buah [${item.name}] berhasil diunggah langsung ke database!`);
         setTimeout(() => setPhotoUploadToast(null), 3000);
       }
     } catch (err) {
       console.error('Direct upload failed:', err);
       alert('Gagal mengunggah foto. Silakan gunakan tombol Edit Foto.');
+    }
+  };
+
+  const handleDirectRetailPhotoFile = async (prod: Product, file: File) => {
+    if (!file || !file.type.startsWith('image/')) return;
+    try {
+      const compressed = await compressImageFile(file, {
+        maxWidth: 800,
+        maxHeight: 800,
+        quality: 0.76,
+        maxSizeKB: 130,
+      });
+      onUpdateProduct({
+        ...prod,
+        image: compressed,
+      });
+      setPhotoUploadToast(`Foto produk [${prod.name}] berhasil diunggah langsung ke database!`);
+      setTimeout(() => setPhotoUploadToast(null), 3000);
+    } catch (err) {
+      console.error('Direct retail upload failed:', err);
+      alert('Gagal mengunggah foto produk.');
     }
   };
 

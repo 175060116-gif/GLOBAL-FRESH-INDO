@@ -123,6 +123,10 @@ export const FruitPhotoUploadModal: React.FC<FruitPhotoUploadModalProps> = ({
       });
       setCurrentPreview(compressedDataUrl);
       setUrlInput(compressedDataUrl);
+      // Auto-save immediately to database
+      onSave(compressedDataUrl);
+      setShowSavedFeedback(true);
+      setTimeout(() => setShowSavedFeedback(false), 2500);
     } catch (err) {
       console.error('Error compressing fruit photo:', err);
       alert('Gagal memproses foto buah. Silakan coba file lain atau masukkan tautan URL.');

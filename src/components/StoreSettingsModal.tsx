@@ -47,7 +47,12 @@ export const StoreSettingsModal: React.FC<StoreSettingsModalProps> = ({
         quality: 0.8,
         maxSizeKB: 60,
       });
-      setFormData(prev => ({ ...prev, logoUrl: compressedLogo }));
+      setFormData(prev => {
+        const next = { ...prev, logoUrl: compressedLogo };
+        onSave(next);
+        return next;
+      });
+      setShowSavedToast(true);
     } catch (err: unknown) {
       console.error('Logo compress error:', err);
       alert('Gagal memproses logo. Silakan gunakan file gambar lain.');

@@ -44,7 +44,9 @@ import {
   saveWholesaleItemToFirestore,
   deleteWholesaleItemFromFirestore,
   subscribeToStoreSettings,
-  saveStoreSettingsToFirestore
+  saveStoreSettingsToFirestore,
+  subscribeToBusinessUnits,
+  saveBusinessUnitToFirestore
 } from './services/firebaseService';
 import { 
   Home, FileText, MessageCircle, ShoppingBag, 
@@ -124,10 +126,17 @@ export function App() {
       }
     });
 
+    const unsubBusinessUnits = subscribeToBusinessUnits((cloudUnits) => {
+      if (cloudUnits && cloudUnits.length > 0) {
+        setBusinessUnits(cloudUnits);
+      }
+    });
+
     return () => {
       unsubProducts();
       unsubWholesale();
       unsubSettings();
+      unsubBusinessUnits();
     };
   }, []);
 
@@ -289,11 +298,15 @@ export function App() {
       saveStoredBusinessUnits(next);
       return next;
     });
+    saveBusinessUnitToFirestore(updated).catch((err) => console.warn('Sync business unit to cloud failed:', err));
   };
 
   const handleResetBusinessUnits = () => {
     const def = resetStoredBusinessUnits();
     setBusinessUnits(def);
+    for (const unit of def) {
+      saveBusinessUnitToFirestore(unit).catch((err) => console.warn('Reset unit sync failed:', err));
+    }
   };
 
   const handleSaveFarmerImage = (newImageUrl: string) => {

@@ -76,6 +76,20 @@ service cloud.firestore {
         && (!('customRequest' in data) || (data.customRequest is string && data.customRequest.size() <= 500));
     }
 
+    function isValidBusinessUnit(data) {
+      return data.keys().hasAll(['id', 'title', 'description'])
+        && data.id is string && data.id.size() > 0 && data.id.size() <= 64
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 150
+        && data.description is string && data.description.size() <= 1500
+        && (!('badgeLeft' in data) || (data.badgeLeft is string && data.badgeLeft.size() <= 100))
+        && (!('badgeRight' in data) || (data.badgeRight is string && data.badgeRight.size() <= 100))
+        && (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 450000))
+        && (!('actionLabel' in data) || (data.actionLabel is string && data.actionLabel.size() <= 100))
+        && (!('bannerTitle' in data) || (data.bannerTitle is string && data.bannerTitle.size() <= 150))
+        && (!('bannerSubtitle' in data) || (data.bannerSubtitle is string && data.bannerSubtitle.size() <= 150))
+        && (!('checklist' in data) || (data.checklist is list && data.checklist.size() <= 10));
+    }
+
     // Katalog Buah Segar
     match /products/{productId} {
       allow read: if true;
@@ -101,6 +115,13 @@ service cloud.firestore {
     match /consultationInquiries/{inquiryId} {
       allow create: if isValidId(inquiryId) && isValidConsultation(request.resource.data);
       allow read, update, delete: if isSignedIn() && isValidId(inquiryId);
+    }
+
+    // Kartu Unit Bisnis (Ritel, B2B, BGN)
+    match /businessUnits/{unitId} {
+      allow read: if true;
+      allow create, update: if isValidId(unitId) && isValidBusinessUnit(request.resource.data);
+      allow delete: if isValidId(unitId);
     }
   }
 }

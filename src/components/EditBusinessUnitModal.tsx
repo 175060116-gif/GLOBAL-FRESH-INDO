@@ -91,6 +91,20 @@ export const EditBusinessUnitModal: React.FC<EditBusinessUnitModalProps> = ({
         maxSizeKB: 120,
       });
       setImageUrl(compressed);
+
+      // Auto-save immediately to Cloud Firestore database
+      const autoUpdated: BusinessUnitCard = {
+        ...card,
+        title: title.trim() || card.title,
+        badgeLeft: badgeLeft.trim() || card.badgeLeft,
+        badgeRight: badgeRight.trim() || card.badgeRight,
+        description: description.trim() || card.description,
+        imageUrl: compressed,
+        checklist: [checklist1, checklist2, checklist3].filter(Boolean),
+        actionLabel: actionLabel.trim() || card.actionLabel,
+      };
+      onSave(autoUpdated);
+      setSuccessMessage('Foto berhasil diunggah & langsung tersimpan ke Database Cloud Firestore!');
     } catch (err: unknown) {
       console.error('Error compressing unit photo:', err);
       alert('Gagal memproses gambar. Silakan gunakan file lain atau gunakan tautan URL.');

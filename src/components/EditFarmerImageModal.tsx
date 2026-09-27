@@ -70,6 +70,8 @@ export const EditFarmerImageModal: React.FC<EditFarmerImageModalProps> = ({
       });
       setImageUrl(compressedDataUrl);
       setUploadedFileName(file.name);
+      onSave(compressedDataUrl);
+      setShowSavedToast(true);
     } catch (err: unknown) {
       console.error('Compress error:', err);
       alert('Gagal mengompres foto. Silakan coba foto lain atau gunakan tautan URL.');
