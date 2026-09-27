@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Sitemap Google Search Console
+Sitemap: https://global-fresh-indo.vercel.app/sitemap.xml

@@ -58,7 +58,8 @@ service cloud.firestore {
         && (!('operatingHours' in data) || (data.operatingHours is string && data.operatingHours.size() <= 100))
         && (!('operationalDays' in data) || (data.operationalDays is string && data.operationalDays.size() <= 100))
         && (!('logoUrl' in data) || (data.logoUrl is string && data.logoUrl.size() <= 450000))
-        && (!('farmerImageUrl' in data) || (data.farmerImageUrl is string && data.farmerImageUrl.size() <= 450000));
+        && (!('farmerImageUrl' in data) || (data.farmerImageUrl is string && data.farmerImageUrl.size() <= 450000))
+        && (!('googleVerificationTag' in data) || (data.googleVerificationTag is string && data.googleVerificationTag.size() <= 500));
     }
 
     function isValidConsultation(data) {

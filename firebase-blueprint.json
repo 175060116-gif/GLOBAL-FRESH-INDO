@@ -208,6 +208,11 @@
           "type": "string",
           "description": "URL atau data gambar foto petani kemitraan / kebun",
           "maxLength": 450000
+        },
+        "googleVerificationTag": {
+          "type": "string",
+          "description": "Kode atau tag meta verifikasi Google Search Console",
+          "maxLength": 500
         }
       },
       "required": ["id", "storeName", "phone", "phoneOrders", "address"]

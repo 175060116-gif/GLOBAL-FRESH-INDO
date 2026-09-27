@@ -9,6 +9,7 @@ export interface StoreSettings {
   logoUrl: string;
   hideLoginMenu?: boolean;
   farmerImageUrl?: string;
+  googleVerificationTag?: string;
 }
 
 export const DEFAULT_STORE_SETTINGS: StoreSettings = {
@@ -22,6 +23,7 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   logoUrl: '/global_fresh_logo.jpg',
   hideLoginMenu: true,
   farmerImageUrl: '/petani_rambutan.jpg',
+  googleVerificationTag: '2XMOxtGagnCSyL51ObGNiSakVARH0sqGDkRsnFFKm3A',
 };
 
 const SETTINGS_KEY = 'gfi_store_settings';
@@ -37,6 +39,9 @@ export const getStoredSettings = (): StoreSettings => {
       }
       if (parsed.logoUrl && parsed.logoUrl.length > 350000) {
         parsed.logoUrl = DEFAULT_STORE_SETTINGS.logoUrl;
+      }
+      if (!parsed.googleVerificationTag) {
+        parsed.googleVerificationTag = DEFAULT_STORE_SETTINGS.googleVerificationTag;
       }
       return { ...DEFAULT_STORE_SETTINGS, ...parsed };
     }

@@ -292,6 +292,7 @@ export function subscribeToStoreSettings(
         logoUrl: raw.logoUrl || DEFAULT_STORE_SETTINGS.logoUrl,
         hideLoginMenu: DEFAULT_STORE_SETTINGS.hideLoginMenu,
         farmerImageUrl: raw.farmerImageUrl || DEFAULT_STORE_SETTINGS.farmerImageUrl,
+        googleVerificationTag: raw.googleVerificationTag || '',
       };
 
       saveStoredSettings(mapped);
@@ -325,6 +326,10 @@ export async function saveStoreSettingsToFirestore(settings: StoreSettings): Pro
 
     if (settings.farmerImageUrl && settings.farmerImageUrl.length <= 450000) {
       cleanData.farmerImageUrl = settings.farmerImageUrl;
+    }
+
+    if (settings.googleVerificationTag !== undefined) {
+      cleanData.googleVerificationTag = String(settings.googleVerificationTag).slice(0, 500);
     }
 
     await setDoc(docRef, cleanData, { merge: true });

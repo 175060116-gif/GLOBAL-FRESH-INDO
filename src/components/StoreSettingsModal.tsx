@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { StoreSettings, DEFAULT_STORE_SETTINGS } from '../data/storeSettings';
 import { 
   X, Upload, RotateCcw, Check, Store, Phone, 
-  MapPin, Clock, Image as ImageIcon, Lock, EyeOff, Eye, Key, Sparkles, Loader2 
+  MapPin, Clock, Image as ImageIcon, Lock, EyeOff, Eye, Key, Sparkles, Loader2,
+  Globe, ExternalLink, Copy
 } from 'lucide-react';
 import { compressImageFile } from '../utils/imageCompressor';
 
@@ -343,6 +344,96 @@ export const StoreSettingsModal: React.FC<StoreSettingsModalProps> = ({
                   <strong className="text-[#17331D]">Akses Tautan #admin</strong>: Tambahkan <code className="bg-[#E8F5E4] text-[#087F23] px-1 py-0.5 rounded font-mono text-[10px]">#admin</code> di akhir alamat browser.
                 </li>
               </ul>
+            </div>
+          </div>
+
+          {/* Section 5: Integrasi Google Search Console & SEO */}
+          <div className="space-y-3 pt-3 border-t border-[#E2EBD8]">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-[#087F23]/10 flex items-center justify-center text-[#087F23]">
+                  <Globe className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black text-[#17331D]">
+                    5. Integrasi Google Search Console & SEO
+                  </h3>
+                  <p className="text-[10.5px] text-[#6B7D70]">
+                    Daftarkan website ke Google agar terindeks di mesin pencari
+                  </p>
+                </div>
+              </div>
+              <a
+                href="https://search.google.com/search-console/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10.5px] font-bold text-[#087F23] hover:underline flex items-center gap-1 bg-[#E8F5E4] px-2.5 py-1 rounded-lg"
+              >
+                <span>Buka Search Console</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+
+            <div className="bg-[#F7FAF5] p-3 rounded-2xl border border-[#CDE0C4] space-y-2.5">
+              <div>
+                <label className="block text-xs font-bold text-[#17331D] mb-1">
+                  Kode Tag Verifikasi Google (HTML Tag)
+                </label>
+                <input
+                  type="text"
+                  value={formData.googleVerificationTag || ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const match = val.match(/content=["']([^"']+)["']/i);
+                    const cleaned = match ? match[1] : val.trim().replace(/^google-site-verification=\s*/i, '');
+                    setFormData({ ...formData, googleVerificationTag: cleaned });
+                  }}
+                  placeholder="Contoh: vL1X_AbCdE123456789 atau tempel seluruh tag meta..."
+                  className="w-full text-xs px-3 py-2 rounded-xl border border-[#CDE0C4] bg-white font-mono text-[#17331D] focus:outline-none focus:ring-2 focus:ring-[#087F23]"
+                />
+                <span className="text-[10px] text-[#6B7D70] mt-1 block">
+                  Tempel kode verifikasi Google Anda di sini. Tag meta di halaman web akan diperbarui secara otomatis.
+                </span>
+              </div>
+
+              {/* URL & Sitemap Info with 1-click copy */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                <div className="bg-white p-2.5 rounded-xl border border-[#E2EBD8]">
+                  <span className="text-[10px] font-bold text-[#6B7D70] block">URL Website Anda:</span>
+                  <div className="flex items-center justify-between gap-1 mt-0.5">
+                    <span className="font-mono text-[10px] text-[#17331D] truncate select-all">https://global-fresh-indo.vercel.app</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText('https://global-fresh-indo.vercel.app');
+                        alert('URL website berhasil disalin: https://global-fresh-indo.vercel.app');
+                      }}
+                      className="text-[#087F23] hover:text-[#06631B] p-1 rounded hover:bg-[#E8F5E4]"
+                      title="Salin URL"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-white p-2.5 rounded-xl border border-[#E2EBD8]">
+                  <span className="text-[10px] font-bold text-[#6B7D70] block">Peta Situs (Sitemap):</span>
+                  <div className="flex items-center justify-between gap-1 mt-0.5">
+                    <span className="font-mono text-[10px] text-[#17331D] truncate select-all">sitemap.xml</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText('https://global-fresh-indo.vercel.app/sitemap.xml');
+                        alert('URL Sitemap berhasil disalin: https://global-fresh-indo.vercel.app/sitemap.xml');
+                      }}
+                      className="text-[#087F23] hover:text-[#06631B] p-1 rounded hover:bg-[#E8F5E4]"
+                      title="Salin Sitemap URL"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

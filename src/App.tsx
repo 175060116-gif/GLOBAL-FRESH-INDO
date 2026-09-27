@@ -131,6 +131,19 @@ export function App() {
     };
   }, []);
 
+  // Dynamic Google Search Console verification meta tag sync
+  useEffect(() => {
+    if (storeSettings.googleVerificationTag) {
+      let meta = document.querySelector('meta[name="google-site-verification"]');
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute('name', 'google-site-verification');
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute('content', storeSettings.googleVerificationTag);
+    }
+  }, [storeSettings.googleVerificationTag]);
+
   // Secret Keyboard Shortcut: Ctrl + Shift + A (or Cmd + Shift + A on Mac)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
